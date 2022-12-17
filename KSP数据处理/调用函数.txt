@@ -1,0 +1,62 @@
+1.计算目标共振轨道的端点(AP/EP)
+Function XP_C(AP0, EP0, YP, K, R) As Single'计算目标共振轨道的端点(AP/EP)
+    XP_C = (AP0 + EP0 + 2 * R) * K ^ (2 / 3) - 2 * R - YP
+End Function
+
+2.提取并合并字符串中的数字
+Function TNC(T_text As String) As Single '提取并合并字符串中的数字
+Dim ch As String
+    For i = 1 To Len(T_text)
+        ch = Mid(T_text, i, 1)
+        If "0" <= ch And ch <= "9" Then
+            TNC = TNC * 10 + Val(ch)
+        End If
+    Next i
+End Function
+
+3.数字转换为字符串(带逗号)
+Function NTC(num As Single) As String '数字转换为字符串(带逗号)
+Dim i As Integer
+    i = 0
+    Do While num > 0
+        If i = 3 Then
+            NTC = "," & NTC
+            i = 0
+        Else
+            NTC = (num Mod 10) & NTC
+            num = num \ 10
+            i = i + 1
+        End If
+    Loop
+End Function
+
+4.计算当前轨道周期
+Function T_C(AP, EP, R) As Single '计算当前轨道周期
+    a = (AP + EP + 2 * R) / 2
+    T_C = 2 * pi * Sqr(a ^ 3 / (GM))
+End Function
+
+5.文字数字转换为字符串(带逗号)
+Function TTC(txt As String) As String '文字数字转换为字符串(带逗号)
+Dim i As Integer, L As Integer
+Dim a(10) As String, s As String
+    L = Len(txt)
+    i = 0
+    Do While L - 2 - 3 * i > 0
+        a(i) = Mid(txt, L - 2 - 3 * i, 3)
+        i = i + 1
+    Loop
+    a(i) = Mid(txt, 1, L - 3 * i)
+    If a(i) <> "" Then
+        TTC = a(i): i = i - 1
+    Else
+        TTC = a(i - 1): i = i - 2
+    End If
+    Do While i >= 0
+        TTC = TTC & "," & a(i)
+        i = i - 1
+    Loop
+End Function
+
+
+
