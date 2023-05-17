@@ -57,6 +57,7 @@ def load_file_path_file(): #加载地址文件
     
     return file_path
     
+    
 def get_zoom_ratio(OriginalWidth,OriginalHeight):
     yzr=CANVAS_HEIGHT/OriginalHeight
     xzr=CANVAS_WIDTH/OriginalWidth
@@ -69,7 +70,7 @@ def get_zoom_ratio(OriginalWidth,OriginalHeight):
 class Bills_Record:
     def __init__(self) -> None:
         """初始化类"""
-        self.version='1.0.1'
+        self.version='1.1.1'
         print('App Class init successfully!')
         
 
@@ -135,6 +136,8 @@ class Bills_Record:
             width=100
         )
         self.Entry_FilePath.pack(side='left')
+        #将self.Entry_FilePath与一个函数绑定，用于在输入文件路径后自动加载数据
+        self.Entry_FilePath.bind('<Return>',self.Entry_FilePath_Return_Func)
         
         '''
         日期的选择与确定
@@ -143,7 +146,7 @@ class Bills_Record:
             self.Frame_Choices,
             # relief='groove',bd=2,height=100,width=100
         )
-        Frame_Choices_Date.pack(side='right')
+        Frame_Choices_Date.pack(side='left')
 
         Label_DateInput = tk.Label(#年份选择提示词
             Frame_Choices_Date,
@@ -196,6 +199,21 @@ class Bills_Record:
             command=self.Button_StartAnalyse_func
         )
         self.Button_StartAnalyse.pack(side='right',padx=20)
+        '''
+        计算日均消费
+        '''
+        Frame_Choices_Date = tk.Frame(
+            self.Frame_Choices,
+            # relief='groove',bd=2,height=100,width=100
+        )
+        Frame_Choices_Date.pack(side='right')
+        
+        self.Label_Daily_Consumption = tk.Label(
+            Frame_Choices_Date,
+            text='日均消费：--'
+        )
+        self.Label_Daily_Consumption.pack(side='left')
+        
         '''
         Frame_Show
         用于放置显示的图像
@@ -254,23 +272,39 @@ class Bills_Record:
     def Blank_Func(self):
         return
 
-    def Button_StartAnalyse_func(self):
-        pass
-        MonthlyConsumptionTypeAnalyseChart = np.hstack(
-            self.BillsRecord.Monthly_Consumption_Type_Analyse(year=int(self.Year.get()),month=int(self.Month.get()))
-        )
-        
-        Year_MonthlyConsumptionChangeAnalyseChart = self.BillsRecord.Year_Monthly_Consumption_Change_Analyse(year=int(self.Year.get()))
-        
-        ResizeShape = (CANVAS_WIDTH,CANVAS_HEIGHT)
-        img = Image.fromarray(MonthlyConsumptionTypeAnalyseChart).resize(ResizeShape)
-        self.MonthlyConsumptionTypeAnalyseChart = ImageTk.PhotoImage(img)
-        self.Canvas_MonthlyConsumptionTypeAnalyseChart.create_image(0,0,anchor='nw',image=self.MonthlyConsumptionTypeAnalyseChart)
-        
-        img = Image.fromarray(Year_MonthlyConsumptionChangeAnalyseChart).resize(ResizeShape)
-        self.Year_MonthlyConsumptionChangeAnalyseChart = ImageTk.PhotoImage(img)
-        self.Canvas_Year_MonthlyConsumptionChangeAnalyseChart.create_image(0,0,anchor='nw',image=self.Year_MonthlyConsumptionChangeAnalyseChart)
     
+    def Entry_FilePath_Return_Func(self,event):
+        FilePath = self.Entry_FilePath.get()
+        print('File path is changed to:',FilePath)
+        tk.messagebox.showinfo(title='提示',message='文件路径修改成功！')
+        
+        return self.BillsRecord.Load_Bills_Excel(FilePath=FilePath)
+        
+        
+    def Button_StartAnalyse_func(self):
+        try:
+            Year=int(self.Year.get())
+            Month = int(self.Month.get())
+            MonthlyConsumptionTypeAnalyseChart = np.hstack(
+                self.BillsRecord.Monthly_Consumption_Type_Analyse(year=Year,month=Month)
+            )
+            
+            Year_MonthlyConsumptionChangeAnalyseChart = self.BillsRecord.Year_Monthly_Consumption_Change_Analyse(year=Year)
+            
+            ResizeShape = (CANVAS_WIDTH,CANVAS_HEIGHT)
+            img = Image.fromarray(MonthlyConsumptionTypeAnalyseChart).resize(ResizeShape)
+            self.MonthlyConsumptionTypeAnalyseChart = ImageTk.PhotoImage(img)
+            self.Canvas_MonthlyConsumptionTypeAnalyseChart.create_image(0,0,anchor='nw',image=self.MonthlyConsumptionTypeAnalyseChart)
+            
+            img = Image.fromarray(Year_MonthlyConsumptionChangeAnalyseChart).resize(ResizeShape)
+            self.Year_MonthlyConsumptionChangeAnalyseChart = ImageTk.PhotoImage(img)
+            self.Canvas_Year_MonthlyConsumptionChangeAnalyseChart.create_image(0,0,anchor='nw',image=self.Year_MonthlyConsumptionChangeAnalyseChart)
+
+            DailyConsumption = self.BillsRecord.Daily_Consumption(year=Year,month=Month)
+            self.Label_Daily_Consumption['text']=f'{Year}年{Month}月日均消费￥{DailyConsumption}'
+        except:
+            tk.messagebox.showerror(title='错误',message='输入的日期没有对应数据！')
+        
         
 #功能函数
     def Show_Img(self):
